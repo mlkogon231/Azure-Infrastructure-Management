@@ -1,0 +1,71 @@
+# environments/dev/main.tf
+
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+  }
+  backend "azurerm" {
+    resource_group_name  = "rg-terraform-state"
+    storage_account_name = "tfstate${random_string.suffix.result}"
+    container_name       = "tfstate"
+    key                  = "dev.terraform.tfstate"
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+resource "random_string" "suffix" {
+  length  = 6
+  special = false
+  upper   = false
+}
+
+data "azurerm_client_config" "current" {}
+
+module "webapp" {
+  source = "../../modules/webapp"
+
+  project_name = "demo"
+  environment  = "dev"
+  location     = "eastus"
+
+  sql_admin_username      = var.sql_admin_username
+  sql_admin_password      = var.sql_admin_password
+  sql_aad_admin_object_id = data.azurerm_client_config.current.object_id
+
+  tags = {
+    Environment = "Development"
+    Owner       = "DevTeam"
+    Project     = "Interview Demo"
+  }
+}
+
+# Key Vault for storing secrets
+resource "azurerm_key_vault" "kv" {
+  name                = "kv-demo-dev-${random_string.suffix.result}"
+  location            = "eastus"
+  resource_group_name = module.webapp.resource_group_name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "standard"
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    secret_permissions = [
+      "Get", "List", "Set", "Delete"
+    ]
+  }
+}
+
+# Store sensitive outputs in Key Vault
+resource "azurerm_key_vault_secret" "app_insights_key" {
+  name         = "app-insights-key"
+  value        = module.webapp.application_insights_key
+  key_vault_id = azurerm_key_vault.kv.id
+}
