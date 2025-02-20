@@ -1,6 +1,14 @@
 # Azure Infrastructure Management
 
-This repository showcases enterprise-grade Azure infrastructure management capabilities through Infrastructure as Code (IaC). Built using Terraform and following Azure best practices, it demonstrates how to create, maintain, and scale cloud infrastructure while maintaining security, compliance, and operational excellence.
+This repository showcases 3 core Azure infrastructure management skills:
+
+1. Infrastructure as Code - IaC
+2. Automation of IaC Codebase
+3. CI/CD Infrastructure - Automated Integration with GitHub Actions/Storage of Terraform Code
+
+It was built using Terraform and following Azure best practices.
+
+The code demonstrates how to create, maintain, and scale cloud infrastructure while maintaining security, compliance, and operational excellence.
 
 ## Repository Structure
 
